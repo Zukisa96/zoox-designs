@@ -291,26 +291,6 @@ if(form){
         if(j.ok) sent = true;
       }catch{}
 
-      // 2. If backend not running, use FormSubmit to email AUTOMATICALLY (no app)
-      if(!sent){
-        const fd = new FormData();
-        fd.append('name', data.name);
-        fd.append('email', data.email);
-        fd.append('phone', data.phone);
-        fd.append('service', data.service);
-        fd.append('message', data.message);
-        fd.append('_subject', `New Quote: ${data.service} - ${data.name} - Flagstaff 4810`);
-        fd.append('_captcha', 'false');
-        fd.append('_template', 'table');
-
-        const res2 = await fetch('https://formsubmit.co/ajax/zoox19966@gmail.com', {
-          method: 'POST',
-          body: fd
-        });
-        const j2 = await res2.json();
-        if(j2.success) sent = true;
-      }
-
       if(sent){
         if(status) status.textContent = "✅ Sent! Your request is now in zoox19966@gmail.com - We'll reply in 2h";
       } else {

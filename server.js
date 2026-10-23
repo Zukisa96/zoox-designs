@@ -1,51 +1,42 @@
-require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
 const nodemailer = require('nodemailer');
 const path = require('path');
-
 const app = express();
-app.use(cors({ origin: '*' }));
-app.use(express.json());
 
-// Serve your frontend files (index.html, images, css, etc.)
+app.use(express.json());
 app.use(express.static(__dirname));
 
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-
-transporter.verify((err) => {
-  if(err) console.log('❌ Email config error:', err.message);
-  else console.log('✅ Email ready for', process.env.EMAIL_USER);
-});
-
 app.post('/api/quote', async (req, res) => {
-  const { name, email, phone, service, message } = req.body;
-  try{
-    await transporter.sendMail({
-      from: `"ZooX Website" <${process.env.EMAIL_USER}>`,
-      to: process.env.EMAIL_USER,
-      subject: `New Quote: ${service} - ${name}`,
-      html: `<h3>New Quote Request</h3><p><b>Name:</b> ${name}</p><p><b>Email:</b> ${email}</p><p><b>Phone:</b> ${phone}</p><p><b>Service:</b> ${service}</p><p><b>Message:</b><br>${message}</p>`,
-      replyTo: email
+  console.log('Quote received:', req.body);
+  try {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
     });
-    console.log(`✅ Email sent for ${name} - ${service}`);
-    res.json({ ok: true });
-  }catch(err){
-    console.error(err);
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
 
-// Serve index.html for homepage and any other page
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: 'zoox19966@gmail.com',
+      subject: `New Quote: ${req.body.service} - ${req.body.name}`,
+      html: `
+        <h2>New Quote Request</h2>
+        <p><b>Name:</b> ${req.body.name}</p>
+        <p><b>Email:</b> ${req.body.email}</p>
+        <p><b>Phone:</b> ${req.body.phone}</p>
+        <p><b>Service:</b> ${req.body.service}</p>
+        <p><b>Message:</b> ${req.body.message}</p>
+      `
+    });
+    console.log('✅ Email sent');
+    res.json({ ok: true });
+  } catch (err) {
+    console.log('❌ Email failed:', err.message);
+    res.json({ ok: false, error: err.message });
+  }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Backend running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server live on ${PORT} - Email ready for ${process.env.EMAIL_USER}`));
